@@ -1,0 +1,137 @@
+===== PRÉ-REQUISITOS PARA INSTALAÇÃO DE LIKWID EM LINUX ===============
+
+1. Deve ser usado um Linux standalone:
+
+   * Instalado sozinho em um disco interno ou externo (e.g., pendrive)
+   * Instalado em modo de boot dual, se o disco interno tiver um Windows.
+
+2. LIKWID não funciona em Linux instalado via WSL (Windows Subsystem for
+   Linux),  pois  neste  não  é possível  instalar  módulos  de  kernel,
+   necessários ao LIKWID
+
+3. Os resultados  gerados  pelo  LIKWID NÃO  SÃO  CONFIÁVEIS em  Linux
+   instalado em Maquinas virtuais (como VM Oracle).
+
+
+===== GUIA DE INSTALAÇÃO E CONFIGURAÇÃO DO LINUX PARA USO DO LIKWID ===============
+
+0. Deve-se  compilar e instalar o  LIKWID. Use um dos  links abaixo para
+   fazer o download do código-fonte:
+
+         http://ftp.fau.de/pub/likwid/likwid-stable.tar.gz
+
+         https://github.com/RRZE-HPC/likwid
+
+   --> Para isto, pode-se executar os comandos abaixo:
+
+        $VERSION=stable
+        wget http://ftp.fau.de/pub/likwid/likwid-$VERSION.tar.gz
+        tar -xaf likwid-$VERSION.tar.gz
+        cd likwid-$VERSION
+        
+        # configura compilação. Default é instalar os executáveis e bibliotecas em '/usr/local'
+        vi config.mk
+        make
+
+        # 'sudo' necessário para instalar o daemon de acesso com permissões apropriadas
+        sudo make install
+   
+
+1. Garantir que módulo do kernel 'msr' esteja carregado:
+    * 'lsmod | grep msr':  se não aparecer nada, 'msr' não está carregado
+
+    * Carregar manualmente 'msr' (após boot):
+    
+           sudo modprobe msr
+
+    * Carregar 'msr' automaticamente após boot:
+          --> Editar '/etc/modules' ('sudo vi /etc/modules') e acrescentar uma
+	           linha contendo apenas 'msr'
+
+2. Alterar permissões de '/dev/cpu/*/msr':
+      * Manualmente (após boot):
+
+          sudo chmod o+rw /dev/cpu/*/msr
+          
+      * Automaticamente após boot:
+         - Editar '/etc/rc.local' ('sudo   vi  /etc/rc.local') ou equivalente.
+           Acrescentar a linha abaixo  em alguma linha ANTES da última linha que contém 'exit 0':
+
+                 chmod o+rw /dev/cpu/*/msr
+
+        - Se sua instalação Linux  não tiver o arquivo '/etc/rc.local' ou equivalente, crie o arquivo com o conteúdo abaixo:
+
+                 #!/bin/sh -e
+                 chmod o+rw /dev/cpu/*/msr
+                 exit 0
+         
+         - Executar
+
+                 sudo chmod +x /etc/rc.local
+
+          
+3. Definir 'capability' em alguns comandos do Likwid (administrador)
+
+       sudo setcap cap_sys_rawio+ep /usr/local/bin/likwid-lua
+       sudo setcap cap_sys_rawio+ep /usr/local/sbin/likwid-accessD
+
+4. Acrescentar linhas abaixo em '/etc/profile':
+
+       export LIKWID_HOME="/usr/local"
+ 
+       if [ -d "${LIKWID_HOME}" ] ; then
+	   PATH="$PATH:${LIKWID_HOME}/bin:${LIKWID_HOME}/sbin"
+	   export LIKWID_LIB="${LIKWID_HOME}/lib"
+	   export LIKWID_INCLUDE="${LIKWID_HOME}/include"
+	   export LIKWID_MAN="${LIKWID_HOME}/man"
+	   export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${LIKWID_LIB}"
+	   export MANPATH="$MANPATH:${LIKWID_MAN}"
+       fi
+
+5.  Efetuar reboot e conferir permissões de acesso de '/dev/cpu/*/msr'.
+
+    Para verificar se LIKWID  está corretamente instalado e configurado,
+    executar:
+
+                likwid-topology -c -g
+                likwid-perfctr -a
+
+
+
+===== GUIA DE CONFIGURAÇÃO DE FREQUENCIA DE RELÓGIO EM LINUX ===============
+
+
+No item de (1) a (3), será necessário que se tenha permissão de administrador.
+
+1. Execute a seguinte linha de comando:
+
+   sudo echo "performance" > /sys/devices/system/cpu/cpufreq/policy3/scaling_governor
+
+2. Para retornar à frequencia original
+
+   sudo echo "powersave" > /sys/devices/system/cpu/cpufreq/policy3/scaling_governor 
+
+OBS.: Para permitir que qualquer  usuário possa executar os comandos dos
+      itens (1) e (2), mudar permissão do arquivo:
+
+      sudo chmod a+rw /sys/devices/system/cpu/cpufreq/policy3/scaling_governor 
+
+      E acrescentar o comando acima  (sem 'sudo') em '/etc/rc.local', em
+      alguma linha ANTES da última linha que contém 'exit 0'.
+
+3. Alternativamente, instale o pacote 'cpufrequtils' (via 'apt-get install cpufreputils')
+   e execute os passos abaixo:
+
+   (a) Para aumentar a frequência:
+   
+        sudo cpufreq-set -g performance
+   
+   (b) Para retornar à frequência original:
+   
+        sudo cpufreq-set -g powersave
+   
+   (c) Para verificar a frequência:
+   
+        cpufreq-info
+   
+
