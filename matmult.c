@@ -93,18 +93,30 @@ int main (int argc, char *argv[])
   multMatPtrVet (mPtr_1, vet, n, n, resPtr);
   LIKWID_MARKER_STOP("T1");
 
-  LIKWID_MARKER_START("T2");
+  LIKWID_MARKER_START("MAT*VET");
   multMatRowVet (mRow_1, vet, n, n, resRow);
+  LIKWID_MARKER_STOP("MAT*VET");
+  prnVetor(resRow, n);
+
+  LIKWID_MARKER_START("MAT*VETotimizado_m=4");
   multMatRowVet_otimiz(mRow_1, vet, n, n, resRow);
-  LIKWID_MARKER_STOP("T2");  
+  LIKWID_MARKER_STOP("MAT*VETotimizado_m=4");  
+  prnVetor(resRow, n);
 
   LIKWID_MARKER_START("T3");
   multMatMatPtr (mPtr_1, mPtr_2, n, resMatPtr);
   LIKWID_MARKER_STOP("T3");  
 
-  LIKWID_MARKER_START("T4");
+  LIKWID_MARKER_START("MAT*MAT");
   multMatMatRow (mRow_1, mRow_2, n, resMatRow);
-  LIKWID_MARKER_STOP("T4");  
+  LIKWID_MARKER_STOP("MAT*MAT");
+  prnMatRow(resMatRow, n, n);
+
+  LIKWID_MARKER_START("MAT*MATotimizado");
+  multMatMatRow_otimiz(mRow_1, mRow_2, n, resMatRow);
+  LIKWID_MARKER_STOP("MAT*MATotimizado");
+  prnMatRow(resMatRow, n, n);
+
 
 
 #ifdef DEBUG

@@ -33,6 +33,7 @@ void prnMatRow (MatRow mat, int m, int n);
 
 void multMatMatPtr (MatPtr A, MatPtr B, int n, MatPtr C);
 void multMatMatRow (MatRow A, MatRow B, int n, MatRow C);
+void multMatMatRow_otimiz(MatRow A, MatRow B, int n, MatRow C);
 
 void prnVetor (Vetor vet, int n);
 

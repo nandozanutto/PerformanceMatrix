@@ -191,19 +191,26 @@ void multMatRowVet (MatRow mat, Vetor v, int m, int n, Vetor res)
 }
 
 void multMatRowVet_otimiz (MatRow mat, Vetor v, int m, int n, Vetor res){
-  //usando loop unroll & jam com m=2
+  //usando loop unroll & jam com m=4
+  //usando loop blocking com b=4
   for(int i=0; i<m; ++i)
     res[i] = 0;//zerando pois foi alterado em multMatRowVet
   
-  for(int i=0; i<m-m%2; i+=2)
-    for(int j=0; j<n; ++j){
-      res[i] = res[i] + mat[m*i + j] * v[j];
-      res[i+1] = res[i+1] + mat[m*(i+1) + j] * v[j];
+  for(int ii=0; ii<m/4; ++ii){
+    int istart=ii*4;
+    int iend = istart + 4;
+    for(int jj=0; jj<n/4; ++jj){
+      int jstart = jj*4;
+      int jend = jstart + 4;
+      for(int i=istart; i<iend; i+=4)
+        for(int j=jstart; j<jend; ++j){
+          res[i] = res[i] + mat[m*i + j] * v[j];
+          res[i+1] = res[i+1] + mat[m*(i+1) + j] * v[j];
+          res[i+2] = res[i+2] + mat[m*(i+2) + j] * v[j];
+          res[i+3] = res[i+3] + mat[m*(i+3) + j] * v[j];
+        }
     }
-  //residuo do laço
-  for(int i=m-m%2; i<m; ++i)
-    for(int j=0; j<n; ++j)
-      res[i] = res[i] + mat[m*i +j] * v[j];
+  }
 
 
 }
@@ -230,6 +237,8 @@ void multMatMatPtr (MatPtr A, MatPtr B, int n, MatPtr C)
 }
 
 
+
+
 /**
  *  Funcao multMatMatPtr: Efetua multiplicacao de duas matrizes 'n x n' 
  *  @param A matriz 'n x n'
@@ -248,6 +257,38 @@ void multMatMatRow (MatRow A, MatRow B, int n, MatRow C)
     for (int j=0; j < n; ++j)
       for (int k=0; k < n; ++k)
 	C[i*n+j] += A[i*n+k] * B[k*n+j];
+}
+
+
+void multMatMatRow_otimiz(MatRow A, MatRow B, int n, MatRow C){
+  
+  for(int i=0; i<n; ++i)
+    for(int j=0; j<n; ++j)
+      C[i*n+j] = 0;
+
+
+  for(int ii=0; ii<n/4; ++ii){
+    int istart=ii*4;
+    int iend = istart + 4;
+    for(int jj=0; jj<n/4; ++jj){
+       int jstart = jj*4;
+       int jend = jstart + 4;
+       for(int kk=0; kk<n/4; ++kk){
+         int kstart = kk*4;
+         int kend = kstart + 4;
+         for(int i=istart; i<iend; ++i)
+            for(int j=jstart; j<jend; j+=4){
+              for(int k=kstart; k<kend; ++k){
+                C[i*n+j] += A[i*n+k] * B[k*n+j];
+                C[i*n+j+1] += A[i*n+k] * B[k*n+j+1];
+                C[i*n+j+2] += A[i*n+k] * B[k*n+j+2];
+                C[i*n+j+3] += A[i*n+k] * B[k*n+j+3];
+              }              
+            }
+       }
+    }
+  }
+
 }
 
 
