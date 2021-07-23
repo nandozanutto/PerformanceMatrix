@@ -96,8 +96,8 @@ MatRow geraMatRow (int m, int n, int zerar)
   if (matriz) {
     for (int i=0; i < m; ++i) {
       for (int j=0; j < n; ++j) {
-	if (zerar) matriz[i*m + j] = 0.0;
-        else       matriz[i*m + j] = generateRandomA(i, j);
+	      if (zerar) matriz[i*m + j] = 0.0;
+          else       matriz[i*m + j] = generateRandomA(i, j);
       }
     }
   }
@@ -184,8 +184,28 @@ void multMatRowVet (MatRow mat, Vetor v, int m, int n, Vetor res)
   if (res) {
     for (int i=0; i < m; ++i)
       for (int j=0; j < n; ++j)
-        res[i] += mat[m*i + j] * v[j];
+          res[i] += mat[m*i + j] * v[j];
   }
+
+
+}
+
+void multMatRowVet_otimiz (MatRow mat, Vetor v, int m, int n, Vetor res){
+  //usando loop unroll & jam com m=2
+  for(int i=0; i<m; ++i)
+    res[i] = 0;//zerando pois foi alterado em multMatRowVet
+  
+  for(int i=0; i<m-m%2; i+=2)
+    for(int j=0; j<n; ++j){
+      res[i] = res[i] + mat[m*i + j] * v[j];
+      res[i+1] = res[i+1] + mat[m*(i+1) + j] * v[j];
+    }
+  //residuo do laço
+  for(int i=m-m%2; i<m; ++i)
+    for(int j=0; j<n; ++j)
+      res[i] = res[i] + mat[m*i +j] * v[j];
+
+
 }
 
 

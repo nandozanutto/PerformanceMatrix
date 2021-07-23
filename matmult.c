@@ -95,6 +95,7 @@ int main (int argc, char *argv[])
 
   LIKWID_MARKER_START("T2");
   multMatRowVet (mRow_1, vet, n, n, resRow);
+  multMatRowVet_otimiz(mRow_1, vet, n, n, resRow);
   LIKWID_MARKER_STOP("T2");  
 
   LIKWID_MARKER_START("T3");
